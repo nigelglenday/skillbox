@@ -48,30 +48,42 @@ def _patched_filtered_choices(self):
 _qpc.InquirerControl.filtered_choices = property(_patched_filtered_choices)
 
 
-# Add Esc as a cancel key to questionary.select. The stock select.py only
-# binds Ctrl-Q and Ctrl-C as cancel; pressing Esc does nothing. We patch the
-# returned Question's application key_bindings to add Esc.
-_orig_select = questionary.select
+# Add Esc as a cancel key to every questionary prompt. The stock prompts only
+# bind Ctrl-Q and Ctrl-C as cancel; pressing Esc does nothing (or just clears
+# the text-input buffer). We wrap each questionary entry point to attach an
+# Esc binding to the underlying prompt_toolkit Application that raises
+# KeyboardInterrupt — which questionary catches internally and converts to
+# a None return from .ask().
 
 
-def _select_with_esc(*args, **kwargs):
-    q = _orig_select(*args, **kwargs)
-    try:
-        from prompt_toolkit.keys import Keys as _Keys
-        kb = q.application.key_bindings
+def _wrap_with_esc(orig_fn):
+    """Wrap a questionary prompt builder so Esc cancels the prompt."""
+    def wrapped(*args, **kwargs):
+        q = orig_fn(*args, **kwargs)
+        try:
+            from prompt_toolkit.keys import Keys as _Keys
+            kb = q.application.key_bindings
 
-        @kb.add(_Keys.Escape, eager=True)
-        def _(event):
-            event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
-    except Exception:
-        # If the underlying key_bindings object doesn't support .add (e.g., it's
-        # a frozen MergedKeyBindings), silently skip the patch. Ctrl-C still
-        # works as a fallback.
-        pass
-    return q
+            @kb.add(_Keys.Escape, eager=True)
+            def _(event):
+                event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
+        except Exception:
+            # If the underlying key_bindings object doesn't support .add,
+            # silently skip the patch. Ctrl-C still works as a fallback.
+            pass
+        return q
+    return wrapped
 
 
-questionary.select = _select_with_esc
+# Wrap every questionary prompt type we use so Esc is a universal cancel.
+questionary.select = _wrap_with_esc(questionary.select)
+questionary.text = _wrap_with_esc(questionary.text)
+questionary.confirm = _wrap_with_esc(questionary.confirm)
+questionary.path = _wrap_with_esc(questionary.path)
+if hasattr(questionary, "press_any_key_to_continue"):
+    questionary.press_any_key_to_continue = _wrap_with_esc(
+        questionary.press_any_key_to_continue
+    )
 
 _theme = Theme(
     {
