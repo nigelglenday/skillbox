@@ -441,6 +441,7 @@ def show_help() -> None:
 # ---------------------------------------------------------------------------
 
 ACT_OPEN = "open"
+ACT_VIEW_FULL = "view_full"
 ACT_REVEAL = "reveal"
 ACT_EDIT_TAGS = "edit_tags"
 ACT_COPY_PATH = "copy_path"
@@ -456,6 +457,7 @@ def skill_action_menu(skill: Skill, project_root: Optional["Path"] = None) -> Op
 
     choices = [
         questionary.Choice(title="  📖 Open in default app", value=ACT_OPEN),
+        questionary.Choice(title="  📄 View full content (in less)", value=ACT_VIEW_FULL),
         questionary.Choice(title="  🔍 Reveal in Finder", value=ACT_REVEAL),
         questionary.Choice(title="  📋 Copy path to clipboard", value=ACT_COPY_PATH),
     ]

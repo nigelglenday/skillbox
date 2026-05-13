@@ -240,6 +240,16 @@ def _inspect_and_act(
                 local_status = ("err", f"open failed: {e}")
             continue
 
+        if action == ui.ACT_VIEW_FULL:
+            # Shell to less for full-content paging. -R passes ANSI through,
+            # +1g starts at line 1, quit (q) returns here.
+            try:
+                subprocess.run(["less", "-R", "+1g", str(target)])
+                local_status = ("ok", f"Viewed full content")
+            except Exception as e:
+                local_status = ("err", f"less failed: {e}")
+            continue
+
         if action == ui.ACT_REVEAL:
             try:
                 subprocess.run(["open", "-R", str(dir_target)], check=False)
