@@ -237,16 +237,24 @@ _KIND_COLORS = {
 }
 
 
-def _skill_choice(s: Skill, *, indent: int = 0) -> questionary.Choice:
-    """Format one skill as a picker Choice.
+_KIND_ICONS = {
+    "skill":   "🟣",  # purple circle
+    "command": "🔵",  # blue circle
+    "agent":   "🟡",  # yellow circle
+}
 
-    Plain string title (not FormattedText). `reverse` highlight needs plain
-    strings to render uniformly across the row. Kind colors live in the detail
-    view via the rich theme tokens — not in the picker rows.
+
+def _skill_choice(s: Skill, *, indent: int = 0) -> questionary.Choice:
+    """Format one skill as a picker Choice with a colored emoji kind indicator.
+
+    Plain string title so `reverse` highlight renders uniformly across the row.
+    Color comes from the emoji glyph's intrinsic color, which the terminal
+    renders independent of style. Best of both worlds.
     """
     pad = " " * indent
+    icon = _KIND_ICONS.get(s.kind, "·")
     return questionary.Choice(
-        title=f"{pad}{s.name:<35} {s.kind}",
+        title=f"{pad}{icon}  {s.name:<33} {s.kind}",
         value=("skill", s.name),
     )
 
