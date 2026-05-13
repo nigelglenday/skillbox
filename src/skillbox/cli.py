@@ -213,6 +213,18 @@ def _inspect_and_act(
     project_meaningful = (project_root / ".claude").exists() or project_root != Path.home()
 
     while True:
+        # Re-load the skill from disk so external edits (default app, etc.)
+        # are picked up. Frontmatter changes (tags, description) refresh too.
+        try:
+            refreshed = scan._load_skill_file(
+                skill.path, skill.name, skill.kind, skill.source
+            )
+            # Preserve the project_root attribute lost in re-scan
+            refreshed.project_root = skill.project_root
+            skill = refreshed
+        except Exception:
+            pass  # If re-load fails, fall back to cached skill
+
         _render_header(all_skills, None, no_splash)
         ui.show_skill_detail(skill)
         ui.console.print()
@@ -238,16 +250,6 @@ def _inspect_and_act(
                 local_status = ("ok", msg)
             except Exception as e:
                 local_status = ("err", f"open failed: {e}")
-            continue
-
-        if action == ui.ACT_VIEW_FULL:
-            # Shell to less for full-content paging. -R passes ANSI through,
-            # +1g starts at line 1, quit (q) returns here.
-            try:
-                subprocess.run(["less", "-R", "+1g", str(target)])
-                local_status = ("ok", f"Viewed full content")
-            except Exception as e:
-                local_status = ("err", f"less failed: {e}")
             continue
 
         if action == ui.ACT_REVEAL:
