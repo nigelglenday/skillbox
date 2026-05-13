@@ -1,122 +1,128 @@
 # skillbox
 
-**Parallel Claude Code skills manager — A-Team's companion.**
+![License](https://img.shields.io/badge/license-MIT-yellow) ![Python](https://img.shields.io/badge/python-3.11%2B-blue) ![Platform](https://img.shields.io/badge/platform-macOS-black) ![Termpaper](https://img.shields.io/badge/suite-termpaper-cyan)
 
-Same TUI feel as [a-team](https://github.com/nigelglenday/a-team), different job:
-A-Team manages **sessions**. Skillbox manages **skills** — the markdown SKILL.md
-files, slash commands (`~/.claude/commands/`), and subagent definitions
-(`~/.claude/agents/`) that get loaded into every Claude Code session.
+> *Every tool earns its place.*
+
+Inventory and manage your Claude Code skills, slash commands, and subagents. A TUI companion to [a-team](https://github.com/nigelglenday/a-team).
 
 ```
- _____ _   _ _ _ _ _                  
-/  ___| | (_) | | | |                 
-\ `--.| | ___| | | | |__   _____  __  
- `--. \ |/ / | | | | '_ \ / _ \ \/ /  
-/\__/ /   <| | | | | |_) | (_) >  <   
-\____/|_|\_\_|_|_|_|_.__/ \___/_/\_\  
+ _____ _   _ _ _ _ _
+/  ___| | (_) | | | |
+\ `--.| | ___| | | | |__   _____  __
+ `--. \ |/ / | | | | '_ \ / _ \ \/ /
+/\__/ /   <| | | | | |_) | (_) >  <
+\____/|_|\_\_|_|_|_|_.__/ \___/_/\_\
 ```
 
-## Why
+## What it is
 
-A clean Claude Code install has maybe a dozen skills. After a few plugins,
-some experiments, and a handful of custom slash commands, that number creeps
-past 80. Most of it is silent — you forget what's installed, what's used,
-what's dormant. Skillbox gives you a single inventory view and lets you cull.
+A clean Claude Code install has maybe a dozen skills. After a few plugins, some experiments, and a handful of custom slash commands, that number creeps past 200. `skillbox` gives you one inventory view across all of it — yours, plugins, and per-project — with a picker, an audit, and safe add/remove.
 
-## What it does
+Manages three things uniformly:
 
-- **Scans every skill location** in one pass:
-  - `~/.claude/skills/` — your user-level skills
-  - `~/.claude/commands/` — your user-level slash commands
-  - `~/.claude/agents/` — your subagent definitions
-  - `~/.claude/plugins/cache/<plugin>/.../skills/` — plugin-provided skills
-  - `$PWD/.claude/` — current project's skills/commands/agents
-- **Categorizes** by source (user / project / plugin:X) and kind (skill / command / agent)
-- **Picker UI** (questionary + rich, mirrors a-team's pattern) lets you filter, pick, inspect
-- **Audit** flags duplicates, missing descriptions, and plugin sprawl
-- **Add / remove** user-level skills with safe defaults (never touches plugin-managed ones)
+- **skills** — `~/.claude/skills/<name>/SKILL.md` (auto-triggered capabilities)
+- **commands** — `~/.claude/commands/<name>.md` (slash commands)
+- **agents** — `~/.claude/agents/<name>.md` (subagents)
+
+Plus everything plugins drop into `~/.claude/plugins/cache/...` and anything a project ships in its own `.claude/` directory.
+
+Requires macOS, Claude Code, and Python 3.11+.
 
 ## Install
 
 ```bash
-pipx install -e ~/Documents/other-projects/skillbox
+brew install pipx
+pipx ensurepath
+pipx install git+https://github.com/nigelglenday/skillbox.git
 ```
 
-Or from the published version once it's on GitHub:
+For local dev:
 
 ```bash
-pipx install git+https://github.com/nigelglenday/skillbox
+git clone https://github.com/nigelglenday/skillbox.git
+cd skillbox
+pipx install -e .
 ```
 
-## Usage
+## Use
 
-```bash
-skillbox                       # picker — splash + grouped list with filter
-skillbox ls                    # table view, grouped by source
-skillbox ls --source user      # only your user-level skills
-skillbox ls --kind command     # only slash commands
-skillbox ls --plain            # pipe-friendly: 'kind  source  name'
-skillbox info <name>           # full detail for one skill (frontmatter + preview)
-skillbox plugins               # list installed plugins (from installed_plugins.json)
-skillbox audit                 # duplicates, missing descriptions, plugin sprawl
-skillbox add <path>            # install a user-level skill from a local path
-skillbox add <path> --symlink  # symlink instead of copy (for git-tracked skill libraries)
-skillbox rm <name>             # remove a user/project skill (refuses to touch plugin skills)
 ```
+skillbox                       splash + hierarchical picker (yours / plugins / actions)
+skillbox ls                    plain table, grouped by source
+skillbox ls --plain            pipe-friendly: 'kind  source  name'
+skillbox ls --source user      filter by source (user | project | plugin | all)
+skillbox ls --kind command     filter by kind (skill | command | agent)
+skillbox ls --group-by tag     group by frontmatter tag
+skillbox info <name>           detail view: scope, tags, description, content preview
+skillbox audit                 duplicates, missing descriptions, plugin sprawl
+skillbox plugins               installed plugins with install/update timestamps
+skillbox add <path>            install a user-level skill from a path
+skillbox add --clipboard       install from clipboard contents
+skillbox add --editor          open editor with a SKILL.md template
+skillbox rm <name>             remove a user/project skill (refuses plugin skills)
+skillbox help                  verbose in-app help
+```
+
+In the picker:
+
+- type to filter, ↑↓ to move, enter to pick
+- pick a skill → action menu (open, reveal in Finder, copy path, edit tags, remove)
+- pick a plugin folder → drill into that plugin's skills
+- esc / ctrl-c to go back
+
+After every action, a one-shot status banner appears above the menu. Pattern matches a-team: app frame stays anchored, transient feedback above the menu.
 
 ## Layout
 
-Same shape as a-team:
+Skills live in a few canonical places. `skillbox` scans all of them on every invocation — no separate registry to maintain.
 
+| Source | Path | Available in |
+|---|---|---|
+| `user` | `~/.claude/skills /commands /agents` | every Claude Code session |
+| `plugin:X` | `~/.claude/plugins/cache/<plugin>/.../skills/` | every session (managed by `claude /plugin`) |
+| `project` | `<cwd>/.claude/...` | only that project's sessions |
+
+The detail view shows the **scope** explicitly: *"everywhere (user-level)"*, *"everywhere (via X plugin)"*, or *"in `<path>/` only"*.
+
+## Tags
+
+Add `tags:` to a skill's frontmatter to organize them:
+
+```yaml
+---
+name: my-skill
+description: One-line description.
+tags: [writing, finance]
+---
 ```
-src/skillbox/
-├── __init__.py
-├── __main__.py
-├── cli.py          # click command dispatch
-├── scan.py         # filesystem scanning, frontmatter parsing
-├── ui.py           # themed console + picker (rich + questionary)
-└── splash_art.py   # ASCII banner
-```
+
+When any of your skills have tags, the picker sub-groups YOURS by tag (skills with multiple tags appear under each). `skillbox ls --group-by tag` does the same on the command line. Tagging is the recommended way to organize — folders force a single hierarchy; tags don't.
 
 ## Calling skillbox from an agent
 
-Claude Code agents can invoke skillbox's non-interactive subcommands via the
-Bash tool. The interactive picker requires a TTY and won't work in headless
-mode, but everything else is agent-callable:
+Non-interactive subcommands work in headless mode (Bash tool, CI, scripts):
 
 | Command | Use case |
 |---|---|
-| `skillbox ls --plain` | Full skill inventory in pipe-friendly format (`kind  source  name`) |
-| `skillbox ls --plain --source user` | Just user-level skills |
-| `skillbox ls --kind command` | Just slash commands |
-| `skillbox info <name>` | Get description, scope, tags, content preview for one skill |
+| `skillbox ls --plain` | Full inventory in pipe-friendly format |
+| `skillbox info <name>` | Description + scope + content preview for one skill |
 | `skillbox audit` | Find duplicates, missing descriptions, plugin sprawl |
-| `skillbox plugins` | List installed plugins with install/update timestamps |
-| `skillbox add <path>` | Install a user-level skill from a known local path |
-| `skillbox rm <name> --force` | Remove a user/project skill non-interactively |
+| `skillbox plugins` | Installed plugins overview |
+| `skillbox add <path>` | Install a skill from a known local path |
+| `skillbox rm <name> --force` | Remove non-interactively |
 
-The interactive flows (picker, `add --clipboard`, `add --editor`) all require
-a real terminal — they're for humans.
+The interactive flows (picker, paste-content, editor, clipboard) all require a real terminal — they're for humans.
 
-Example agent use:
-```bash
-# An EA agent auditing its own toolkit
-skillbox ls --plain --source user
-skillbox audit
-```
+## Part of termpaper
 
-## Relationship to a-team
+`skillbox` is one of a suite of TUI tools for managing Claude Code state:
 
-| | a-team | skillbox |
-|---|---|---|
-| Manages | Claude Code sessions | Claude Code skills, commands, agents |
-| Registry | `~/.config/a-team/agents.toml` | Filesystem scan (no separate registry) |
-| Launches | Ghostty windows running `claude` | Nothing — read-only by default |
-| Theme | Orange/red (A-Team van) | Cyan/teal (workshop) |
-| Companion to | Skillbox | A-Team |
+- **[a-team](https://github.com/nigelglenday/a-team)** — manage parallel Claude Code sessions; pick one to open, restore all of them
+- **skillbox** — manage skills, commands, and subagents installed across those sessions
+- (more to come)
 
-Run them side by side. A-Team picks who you're talking to. Skillbox tells you
-what tools they're all carrying.
+Different colors, same pattern: a splash banner anchors the screen, a filterable picker lets you find what you need, an action menu lets you act without leaving the screen. Each tool ships independently so you can install only what you use.
 
 ## License
 
