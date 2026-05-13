@@ -534,7 +534,6 @@ def show_help() -> None:
 # ---------------------------------------------------------------------------
 
 ACT_OPEN = "open"
-ACT_VIEW_FULL = "view_full"
 ACT_REVEAL = "reveal"
 ACT_EDIT_TAGS = "edit_tags"
 ACT_COPY_PATH = "copy_path"
@@ -550,26 +549,34 @@ def skill_action_menu(skill: Skill, project_root: Optional["Path"] = None) -> Op
 
     choices = [
         questionary.Choice(title="  📖 Open in default app", value=ACT_OPEN),
-        questionary.Choice(title="  📄 View full content (in less)", value=ACT_VIEW_FULL),
         questionary.Choice(title="  🔍 Reveal in Finder", value=ACT_REVEAL),
         questionary.Choice(title="  📋 Copy path to clipboard", value=ACT_COPY_PATH),
     ]
     if skill.is_user_writable:
         choices.append(questionary.Choice(title="  🏷️  Edit tags", value=ACT_EDIT_TAGS))
-        # Move action: only when there's somewhere meaningful to move to
+        # Move action: show the actual target path so "this directory" isn't ambiguous
         if skill.source == "user":
-            label = "  ↔️  Move to project-level (this directory)" if project_root else "  ↔️  Move (no project in cwd)"
-            disabled = project_root is None
-            if disabled:
-                choices.append(
-                    questionary.Choice(title=label, value=None, disabled=True)
-                )
-            else:
+            if project_root is not None:
+                # Show the project path in the label, with ~ shorthand
+                from pathlib import Path as _P
+                home = str(_P.home())
+                short = str(project_root)
+                if short.startswith(home):
+                    short = "~" + short[len(home):]
+                label = f"  ↔️  Move to project: {short}/.claude/"
                 choices.append(questionary.Choice(title=label, value=ACT_MOVE))
+            else:
+                choices.append(
+                    questionary.Choice(
+                        title="  ↔️  Move to project (disabled, run skillbox from a project folder)",
+                        value=None,
+                        disabled=True,
+                    )
+                )
         elif skill.source == "project":
             choices.append(
                 questionary.Choice(
-                    title="  ↔️  Move to user-level (available everywhere)",
+                    title="  ↔️  Move to user level (available in every session)",
                     value=ACT_MOVE,
                 )
             )
