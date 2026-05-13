@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "skillbox"
+version = "0.9.0"
+description = "Parallel Claude Code skills manager — your toolbox for skills, slash commands, and subagents. A-Team's companion."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Nigel Glenday" }]
+keywords = ["claude-code", "cli", "skills-manager", "macos"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "rich>=13.0",
+    "questionary>=2.0",
+    "click>=8.1",
+    "tomli-w>=1.0",
+]
+
+[project.scripts]
+skillbox = "skillbox.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/nigelglenday/skillbox"
+Repository = "https://github.com/nigelglenday/skillbox"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/skillbox"]
