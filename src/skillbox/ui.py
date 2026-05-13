@@ -225,24 +225,24 @@ def picker_top(skills: list[Skill]) -> Optional[tuple[str, Optional[str]]]:
     choices: list = []
     name_map: dict[str, Skill] = {}
 
-    # --- YOURS section ---
-    if yours:
-        # If any of YOUR skills have tags, sub-group by tag inline so the
-        # categorization is visible. Skills with multiple tags appear under each.
-        # Otherwise show a flat list.
-        any_tagged = any(s.tags for s in yours)
-        choices.append(questionary.Separator(f"── YOURS ({len(yours)}) ──"))
+    # --- YOURS section: split user vs project so the scope is visible ---
+    yours_user = [s for s in yours if s.source == "user"]
+    yours_project = [s for s in yours if s.source == "project"]
 
+    def _emit_yours_group(label: str, group: list[Skill]) -> None:
+        """Render one YOURS subgroup (user or project), with tag subdivisions if any."""
+        if not group:
+            return
+        choices.append(questionary.Separator(f"── {label} ({len(group)}) ──"))
+        any_tagged = any(s.tags for s in group)
         if any_tagged:
-            # Build tag groups
             tag_groups: dict[str, list[Skill]] = {}
-            for s in yours:
+            for s in group:
                 if s.tags:
                     for t in s.tags:
                         tag_groups.setdefault(t, []).append(s)
                 else:
                     tag_groups.setdefault("(untagged)", []).append(s)
-            # Sort: real tags first, then untagged at the end
             tag_keys = sorted([t for t in tag_groups if t != "(untagged)"])
             if "(untagged)" in tag_groups:
                 tag_keys.append("(untagged)")
@@ -256,9 +256,13 @@ def picker_top(skills: list[Skill]) -> Optional[tuple[str, Optional[str]]]:
                     choices.append(_skill_choice(s, indent=4))
                     name_map[s.name] = s
         else:
-            for s in yours:
+            for s in group:
                 choices.append(_skill_choice(s, indent=2))
                 name_map[s.name] = s
+
+    # User-level always shows if present; project section only when scanned from a project
+    _emit_yours_group("YOURS (user, available everywhere)", yours_user)
+    _emit_yours_group("YOURS (this project)", yours_project)
 
     # --- PLUGINS section (collapsed) ---
     if plugins:
@@ -430,11 +434,12 @@ ACT_OPEN = "open"
 ACT_REVEAL = "reveal"
 ACT_EDIT_TAGS = "edit_tags"
 ACT_COPY_PATH = "copy_path"
+ACT_MOVE = "move"
 ACT_REMOVE = "remove"
 ACT_BACK = "back"
 
 
-def skill_action_menu(skill: Skill) -> Optional[str]:
+def skill_action_menu(skill: Skill, project_root: Optional["Path"] = None) -> Optional[str]:
     """Show action menu for a single skill. Returns the chosen action."""
     if not _is_tty():
         return None
@@ -446,18 +451,42 @@ def skill_action_menu(skill: Skill) -> Optional[str]:
     ]
     if skill.is_user_writable:
         choices.append(questionary.Choice(title="  🏷️  Edit tags", value=ACT_EDIT_TAGS))
+        # Move action: only when there's somewhere meaningful to move to
+        if skill.source == "user":
+            label = "  ↔️  Move to project-level (this directory)" if project_root else "  ↔️  Move (no project in cwd)"
+            disabled = project_root is None
+            if disabled:
+                choices.append(
+                    questionary.Choice(title=label, value=None, disabled=True)
+                )
+            else:
+                choices.append(questionary.Choice(title=label, value=ACT_MOVE))
+        elif skill.source == "project":
+            choices.append(
+                questionary.Choice(
+                    title="  ↔️  Move to user-level (available everywhere)",
+                    value=ACT_MOVE,
+                )
+            )
         choices.append(questionary.Choice(title="  🗑️  Remove this skill", value=ACT_REMOVE))
     else:
         choices.append(
             questionary.Choice(
-                title="  🏷️  Edit tags (disabled — plugin skill, read-only)",
+                title="  🏷️  Edit tags (disabled, plugin skill is read-only)",
                 value=None,
                 disabled=True,
             )
         )
         choices.append(
             questionary.Choice(
-                title="  🗑️  Remove (disabled — use `claude /plugin` for plugin skills)",
+                title="  ↔️  Move (disabled, plugin skill is read-only)",
+                value=None,
+                disabled=True,
+            )
+        )
+        choices.append(
+            questionary.Choice(
+                title="  🗑️  Remove (disabled, use `claude /plugin` for plugin skills)",
                 value=None,
                 disabled=True,
             )

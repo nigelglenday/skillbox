@@ -133,6 +133,52 @@ def run_picker(no_splash: bool = False) -> None:
                 continue
 
 
+def _move_skill(skill: scan.Skill, project_root: Path) -> tuple[Path, Path]:
+    """Move a user-level skill to project-level, or vice versa.
+
+    Returns (old_path, new_path) of the moved file/directory.
+    Raises if the destination already exists or skill isn't movable.
+    """
+    if not skill.is_user_writable:
+        raise RuntimeError("plugin skills cannot be moved")
+
+    # Resolve the on-disk thing we're moving (directory for SKILL.md, else the file)
+    src = skill.path
+    if src.name == "SKILL.md":
+        src = src.parent  # the skill directory
+
+    # Compute destination based on direction
+    if skill.source == "user":
+        # user -> project: put under project_root/.claude/...
+        if skill.kind == "skill":
+            dest = project_root / ".claude" / "skills" / src.name
+        elif skill.kind == "command":
+            dest = project_root / ".claude" / "commands" / src.name
+        elif skill.kind == "agent":
+            dest = project_root / ".claude" / "agents" / src.name
+        else:
+            raise RuntimeError(f"unknown kind: {skill.kind}")
+    elif skill.source == "project":
+        # project -> user level
+        if skill.kind == "skill":
+            dest = scan.USER_SKILLS_DIR / src.name
+        elif skill.kind == "command":
+            dest = scan.USER_COMMANDS_DIR / src.name
+        elif skill.kind == "agent":
+            dest = scan.USER_AGENTS_DIR / src.name
+        else:
+            raise RuntimeError(f"unknown kind: {skill.kind}")
+    else:
+        raise RuntimeError(f"can't move from source: {skill.source}")
+
+    if dest.exists():
+        raise RuntimeError(f"destination already exists: {dest}")
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(src), str(dest))
+    return src, dest
+
+
 def _open_in_default_app(path: Path) -> str:
     """Open a file in the user's default app.
 
@@ -162,6 +208,10 @@ def _inspect_and_act(
     """
     local_status: tuple[str, str] | None = None
 
+    project_root = Path(os.getcwd())
+    # Project is meaningful only if it has a .claude folder OR isn't $HOME
+    project_meaningful = (project_root / ".claude").exists() or project_root != Path.home()
+
     while True:
         _render_header(all_skills, None, no_splash)
         ui.show_skill_detail(skill)
@@ -170,7 +220,9 @@ def _inspect_and_act(
             ui.status_banner(local_status[1], kind=local_status[0])
             local_status = None  # one-shot
 
-        action = ui.skill_action_menu(skill)
+        action = ui.skill_action_menu(
+            skill, project_root=project_root if project_meaningful else None
+        )
         if action in (None, ui.ACT_BACK):
             return None
 
@@ -229,6 +281,18 @@ def _inspect_and_act(
                 local_status = ("ok", f"Copied to clipboard")
             except Exception as e:
                 local_status = ("err", f"pbcopy failed: {e}")
+            continue
+
+        if action == ui.ACT_MOVE:
+            try:
+                old_path, new_path = _move_skill(skill, project_root)
+                local_status = ("ok", f"Moved to {new_path}")
+                # The skill object is now stale (path changed). Bail back to
+                # the picker so the next iteration re-scans and finds it in
+                # its new location.
+                return ("ok", f"Moved '{skill.name}' to {new_path.parent}")
+            except Exception as e:
+                local_status = ("err", f"move failed: {e}")
             continue
 
         if action == ui.ACT_REMOVE:
