@@ -76,10 +76,10 @@ _picker_style = questionary.Style(
     [
         ("question", "bold"),
         ("pointer", "fg:#00d7ff bold"),
-        # Use explicit background color (not `reverse`) so per-segment foreground
-        # colors on FormattedText titles (e.g., colored kind labels) are preserved
-        # under the highlight bar. The bg extends to the full row width.
-        ("highlighted", "bg:#1c4762 bold"),
+        # Stronger bg color (not `reverse`) so per-segment foreground colors on
+        # FormattedText titles (colored kind labels) survive under the highlight.
+        # bg:#0087d7 is bright enough to be visible on most dark terminal themes.
+        ("highlighted", "bg:#0087d7 fg:#ffffff bold"),
         ("selected", "fg:#00d7ff"),
         ("answer", "fg:#00d7ff bold"),
         ("instruction", "fg:#888888"),
@@ -241,8 +241,11 @@ def _skill_choice(s: Skill, *, indent: int = 0) -> questionary.Choice:
     """Format one skill as a picker Choice with a color-coded kind label.
 
     Uses FormattedText (list-of-tuples) for the per-segment kind color.
-    The 'highlighted' style uses bg-only (not `reverse`) so these per-segment
-    foreground colors survive under the highlight bar.
+    The 'highlighted' style sets an explicit bg color so per-segment foreground
+    colors survive under the highlight bar.
+
+    Title is padded so the highlight bg extends across a wide row, not just
+    where the short text ends. Kind segment is also padded to fixed width.
 
     Kind colors: skill=magenta, command=blue, agent=yellow.
     """
@@ -250,8 +253,9 @@ def _skill_choice(s: Skill, *, indent: int = 0) -> questionary.Choice:
     kind_style = _KIND_COLORS.get(s.kind, "")
     return questionary.Choice(
         title=[
-            ("", f"{pad}{s.name:<30} "),
-            (kind_style, s.kind),
+            ("", f"{pad}{s.name:<35} "),
+            (kind_style, f"{s.kind:<10}"),
+            ("", " " * 20),  # trailing pad so the highlight bar feels wide
         ],
         value=("skill", s.name),
     )
