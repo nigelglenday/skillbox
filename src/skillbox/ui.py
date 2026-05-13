@@ -449,11 +449,12 @@ def show_skill_detail(skill: Skill) -> None:
     console.print(f"[soft]scope:[/soft] [accent]{skill.scope_label}[/accent]")
     console.print(f"[soft]path:[/soft]  {skill.path}")
     if skill.tags:
-        console.print(f"[soft]tags:[/soft]  {', '.join(skill.tags)}")
+        # Render each tag as a bracketed cyan chip for visibility
+        chips = "  ".join(f"[box]\\[{t}][/box]" for t in skill.tags)
+        console.print(f"[soft]tags:[/soft]  {chips}")
     else:
-        # Escape the bracketed example so rich doesn't parse it as markup
         console.print(
-            "[soft]tags:[/soft]  [soft](none: add via frontmatter `tags: \\[a, b]`)[/soft]"
+            "[soft]tags:[/soft]  [soft](none: press 'Edit tags' below to add)[/soft]"
         )
     console.print()
 
@@ -565,7 +566,13 @@ def skill_action_menu(skill: Skill, project_root: Optional["Path"] = None) -> Op
         questionary.Choice(title="  📋 Copy path to clipboard", value=ACT_COPY_PATH),
     ]
     if skill.is_user_writable:
-        choices.append(questionary.Choice(title="  🏷️  Edit tags", value=ACT_EDIT_TAGS))
+        # Show the current tags in the action label so the user sees them at a glance
+        if skill.tags:
+            tag_preview = "  ".join(f"[{t}]" for t in skill.tags)
+            edit_label = f"  🏷️  Edit tags  ·  {tag_preview}"
+        else:
+            edit_label = "  🏷️  Edit tags  ·  (none yet)"
+        choices.append(questionary.Choice(title=edit_label, value=ACT_EDIT_TAGS))
         # Move action: show the actual target path so "this directory" isn't ambiguous
         if skill.source == "user":
             if project_root is not None:
