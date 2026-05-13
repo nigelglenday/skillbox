@@ -5,4 +5,4 @@ the skills, slash commands, and subagents loaded into your Claude Code
 sessions.
 """
 
-__version__ = "0.13.1"
+__version__ = "0.13.2"
