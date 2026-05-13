@@ -170,7 +170,7 @@ def render_table(skills: list[Skill], group_by: str = "source") -> None:
             desc_raw = s.description
             if len(desc_raw) > 120:
                 desc_raw = desc_raw[:117] + "…"
-            desc = desc_raw or "[soft]—[/soft]"
+            desc = desc_raw or "[soft]-[/soft]"
             row = [s.name]
             if group_by != "kind":
                 row.append(_kind_label(s.kind))
@@ -181,9 +181,9 @@ def render_table(skills: list[Skill], group_by: str = "source") -> None:
 
 
 _KIND_COLORS = {
-    "skill":   "fg:#d75fff",  # magenta — capabilities
-    "command": "fg:#5fafff",  # blue — slash commands
-    "agent":   "fg:#ffd75f",  # yellow — subagents
+    "skill":   "fg:#d75fff",  # magenta: capabilities
+    "command": "fg:#5fafff",  # blue: slash commands
+    "agent":   "fg:#ffd75f",  # yellow: subagents
 }
 
 
@@ -348,7 +348,7 @@ def show_skill_detail(skill: Skill) -> None:
     else:
         # Escape the bracketed example so rich doesn't parse it as markup
         console.print(
-            "[soft]tags:[/soft]  [soft](none — add via frontmatter `tags: \\[a, b]`)[/soft]"
+            "[soft]tags:[/soft]  [soft](none: add via frontmatter `tags: \\[a, b]`)[/soft]"
         )
     console.print()
 
@@ -407,7 +407,7 @@ Inventory what's installed, where it lives, what's available in which sessions.
 
   [kind_skill]skill[/kind_skill]           Auto-triggered capability (e.g. nigel-writing)
   [kind_command]command[/kind_command]         /<name> slash command (e.g. /checkmsg)
-  [kind_agent]agent[/kind_agent]           Subagent — runs in a separate context
+  [kind_agent]agent[/kind_agent]           Subagent: runs in a separate context
 
 [box]CLI shortcuts (skip the picker)[/box]
 
@@ -422,8 +422,8 @@ Inventory what's installed, where it lives, what's available in which sessions.
 
 [box]Tips[/box]
 
-  · Tag your skills via frontmatter ([accent]tags: \\[writing, eagent][/accent]) — they auto-group in the picker.
-  · The picker [accent]doesn't[/accent] touch plugin skills — use [accent]claude /plugin remove <name>[/accent] for those.
+  · Tag your skills via frontmatter ([accent]tags: \\[writing, eagent][/accent]): they auto-group in the picker.
+  · The picker [accent]doesn't[/accent] touch plugin skills: use [accent]claude /plugin remove <name>[/accent] for those.
   · After any action, a green/yellow/red status banner shows above the menu.
   · Press [accent]esc[/accent] anywhere to back out one level.
 """
@@ -510,6 +510,9 @@ def skill_action_menu(skill: Skill, project_root: Optional["Path"] = None) -> Op
         f"Action for '{skill.name}':",
         choices=choices,
         style=_picker_style,
+        instruction="(type to filter, ↑↓ to move, enter to pick)",
+        use_search_filter=True,
+        use_jk_keys=False,
     ).ask()
 
 
@@ -555,13 +558,16 @@ def add_flow() -> Optional[dict]:
       {"mode": "path", "path": str}
       {"mode": "paste", "content": str, "name": str, "kind": str}
       {"mode": "editor", "name": str, "kind": str}
-      {"mode": "clipboard"}      # try clipboard contents — if path, use; if md, save
+      {"mode": "clipboard"}      # try clipboard contents: if path, use; if md, save
     """
     if not _is_tty():
         return None
 
     mode = questionary.select(
         "How would you like to add a skill?",
+        instruction="(type to filter, ↑↓ to move, enter to pick)",
+        use_search_filter=True,
+        use_jk_keys=False,
         choices=[
             questionary.Choice(
                 title="  Paste a path to an existing .md file or skill directory",

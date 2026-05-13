@@ -1,4 +1,4 @@
-"""skillbox — main CLI entry point.
+"""skillbox: main CLI entry point.
 
 Subcommands:
     skillbox                       hierarchical picker (yours / plugins / actions)
@@ -44,7 +44,7 @@ when the skill is invoked.)
 @click.option("--no-splash", is_flag=True, help="Suppress the splash banner.")
 @click.pass_context
 def cli(ctx: click.Context, no_splash: bool) -> None:
-    """skillbox — Claude Code skills manager. A-Team's companion."""
+    """skillbox: Claude Code skills manager. A-Team's companion."""
     ctx.ensure_object(dict)
     ctx.obj["no_splash"] = no_splash
 
@@ -56,7 +56,7 @@ def _render_header(skills: list, status: tuple[str, str] | None, no_splash: bool
     """Clear screen and render the persistent header (splash + optional status).
 
     Called at the top of EVERY screen so the app title stays visible
-    — same pattern as a-team.
+   : same pattern as a-team.
     """
     ui.clear_screen()
     if not no_splash:
@@ -124,12 +124,12 @@ def run_picker(no_splash: bool = False) -> None:
                 _render_header(skills, None, no_splash)
                 _run_audit()
                 ui.console.print()
-                input("(press Enter to return to the picker)")
+                input("(press Enter to return to the menu)")
                 continue
             if value == "help":
                 _render_header(skills, None, no_splash)
                 ui.show_help()
-                input("(press Enter to return to the picker)")
+                input("(press Enter to return to the menu)")
                 continue
 
 
@@ -203,7 +203,7 @@ def _inspect_and_act(
     """Show detail for a skill, then loop on the action menu.
 
     Actions show their result as a one-shot status banner above the menu
-    and stay on the same skill — only `back` (or remove) returns to the
+    and stay on the same skill: only `back` (or remove) returns to the
     top picker. a-team pattern: actions are notifications, not navigation.
     """
     local_status: tuple[str, str] | None = None
@@ -306,9 +306,9 @@ def _inspect_and_act(
             continue
 
         if action == ui.ACT_REMOVE:
-            # Destructive — return to top picker since the skill is gone
+            # Destructive: return to top picker since the skill is gone
             if not skill.is_user_writable:
-                local_status = ("err", "refusing — use `claude /plugin` for plugin skills")
+                local_status = ("err", "refusing: use `claude /plugin` for plugin skills")
                 continue
             import questionary
             confirm = questionary.confirm(
@@ -396,7 +396,7 @@ def _interactive_add() -> tuple[str, str] | None:
         Path(tmp_path).unlink(missing_ok=True)
 
         if content.strip() == template.strip():
-            return ("warn", "template unchanged — nothing to install")
+            return ("warn", "template unchanged: nothing to install")
 
         return _install_from_content(name, kind, content)
 
@@ -422,7 +422,7 @@ def _install_from_path(source_path: Path) -> tuple[str, str]:
     else:
         return (
             "err",
-            f"don't know how to install {source_path} — expected SKILL.md dir or .md file",
+            f"don't know how to install {source_path}: expected SKILL.md dir or .md file",
         )
 
     if dest.exists():
@@ -483,7 +483,7 @@ def _run_audit() -> None:
         if s.source.startswith("plugin:"):
             plugin_counts[s.source] = plugin_counts.get(s.source, 0) + 1
 
-    ui.console.print(f"[box]Audit[/box] — scanned {len(skills)} skills")
+    ui.console.print(f"[box]Audit[/box]: scanned {len(skills)} skills")
     ui.console.print()
 
     if issues:
@@ -507,7 +507,7 @@ def _run_audit() -> None:
         ui.console.print()
 
     if plugin_counts:
-        ui.console.print("[box]Plugin sprawl[/box] — skill counts by plugin:")
+        ui.console.print("[box]Plugin sprawl[/box]: skill counts by plugin:")
         for src, count in sorted(plugin_counts.items(), key=lambda x: -x[1]):
             ui.console.print(f"  [cyan]{src.removeprefix('plugin:')}[/cyan]  {count}")
         ui.console.print()
@@ -596,8 +596,8 @@ def plugins_cmd() -> None:
         table.add_row(
             p["name"],
             p["scope"],
-            p["installed_at"][:10] if p["installed_at"] else "—",
-            p["last_updated"][:10] if p["last_updated"] else "—",
+            p["installed_at"][:10] if p["installed_at"] else "-",
+            p["last_updated"][:10] if p["last_updated"] else "-",
         )
     ui.console.print(table)
 
@@ -626,7 +626,7 @@ def rm_cmd(name: str, force: bool) -> None:
         sys.exit(1)
     if not skill.is_user_writable:
         ui.error(
-            f"refusing to remove {skill.source} skill — use `claude /plugin` "
+            f"refusing to remove {skill.source} skill: use `claude /plugin` "
             f"to remove plugin skills."
         )
         sys.exit(1)
@@ -683,7 +683,7 @@ def add_cmd(
       skillbox add <path>          install from a local path (file or dir)
       skillbox add --clipboard     read clipboard (path or raw content)
       skillbox add --editor        open editor with template
-      skillbox add                 (no args) — interactive picker
+      skillbox add                 (no args): interactive picker
 
     Source can be either:
       - A directory containing SKILL.md (Anthropic skill convention)
@@ -742,7 +742,7 @@ def add_cmd(
         content = Path(tmp_path).read_text(encoding="utf-8")
         Path(tmp_path).unlink(missing_ok=True)
         if content.strip() == template.strip():
-            ui.warn("template unchanged — nothing to install")
+            ui.warn("template unchanged: nothing to install")
             return
         _install_from_content(name.strip(), kind, content)
         return

@@ -2,14 +2,14 @@
 
 Skills can live in several locations:
 
-1. ~/.claude/skills/<name>/SKILL.md     — user skill (Anthropic convention)
-2. ~/.claude/skills/<name>.md           — single-file user skill
-3. ~/.claude/commands/<name>.md         — slash command (single-file)
-4. ~/.claude/agents/<name>.md           — subagent definition
+1. ~/.claude/skills/<name>/SKILL.md    : user skill (Anthropic convention)
+2. ~/.claude/skills/<name>.md          : single-file user skill
+3. ~/.claude/commands/<name>.md        : slash command (single-file)
+4. ~/.claude/agents/<name>.md          : subagent definition
 5. ~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/skills/<name>/SKILL.md
-                                        — plugin-provided skill
-6. <PWD>/.claude/skills/<name>/SKILL.md — project-level skill
-7. <PWD>/.claude/commands/<name>.md     — project-level slash command
+                                       : plugin-provided skill
+6. <PWD>/.claude/skills/<name>/SKILL.md: project-level skill
+7. <PWD>/.claude/commands/<name>.md    : project-level slash command
 
 All are surfaced into Claude Code sessions as triggerable skills. Skillbox
 treats them uniformly: name, description (from frontmatter or first
@@ -80,7 +80,7 @@ class Skill:
 def _parse_frontmatter(text: str) -> tuple[dict, str]:
     """Extract YAML-ish frontmatter and the remaining body.
 
-    Looser than full YAML — just key: value pairs between leading `---`
+    Looser than full YAML: just key: value pairs between leading `---`
     fences. Returns (metadata_dict, body_text).
     """
     if not text.startswith("---"):
@@ -293,14 +293,14 @@ def update_tags(path: Path, new_tags: list[str]) -> None:
     tag_line = f"tags: [{', '.join(new_tags)}]" if new_tags else "tags: []"
 
     if not text.startswith("---"):
-        # No frontmatter — prepend one
+        # No frontmatter: prepend one
         new_text = f"---\n{tag_line}\n---\n\n{text}"
         path.write_text(new_text, encoding="utf-8")
         return
 
     end = text.find("\n---", 3)
     if end == -1:
-        # Malformed frontmatter — bail without writing
+        # Malformed frontmatter: bail without writing
         raise ValueError(f"frontmatter missing closing '---' in {path}")
 
     fm_start = 3
