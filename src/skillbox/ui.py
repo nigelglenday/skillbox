@@ -76,7 +76,10 @@ _picker_style = questionary.Style(
     [
         ("question", "bold"),
         ("pointer", "fg:#00d7ff bold"),
-        ("highlighted", "bold reverse"),
+        # Use explicit background color (not `reverse`) so per-segment foreground
+        # colors on FormattedText titles (e.g., colored kind labels) are preserved
+        # under the highlight bar. The bg extends to the full row width.
+        ("highlighted", "bg:#1c4762 bold"),
         ("selected", "fg:#00d7ff"),
         ("answer", "fg:#00d7ff bold"),
         ("instruction", "fg:#888888"),
@@ -104,6 +107,19 @@ def clear_screen() -> None:
     """Clear the terminal (only if attached to a TTY)."""
     if _is_tty():
         console.clear()
+
+
+def wait_for_continue(msg: str = "Press any key (or Esc) to return to the menu") -> None:
+    """Pause for user input, then continue. Both Enter AND Esc return.
+
+    Replaces Python's `input()` which only accepts Enter (Esc has no effect).
+    """
+    if not _is_tty():
+        return
+    try:
+        questionary.press_any_key_to_continue(msg).ask()
+    except (KeyboardInterrupt, EOFError):
+        pass
 
 
 def _is_tty() -> bool:
@@ -214,19 +230,29 @@ def render_table(skills: list[Skill], group_by: str = "source") -> None:
         console.print()
 
 
+_KIND_COLORS = {
+    "skill":   "fg:#d75fff",  # magenta: capabilities
+    "command": "fg:#5fafff",  # blue: slash commands
+    "agent":   "fg:#ffd75f",  # yellow: subagents
+}
+
+
 def _skill_choice(s: Skill, *, indent: int = 0) -> questionary.Choice:
-    """Format one skill as a picker Choice.
+    """Format one skill as a picker Choice with a color-coded kind label.
 
-    Plain string title (not FormattedText) so questionary's full-row
-    highlight (`reverse` style) renders uniformly, matching a-team's
-    pattern. Per-segment colors via FormattedText would fight the reverse
-    rendering and look broken.
+    Uses FormattedText (list-of-tuples) for the per-segment kind color.
+    The 'highlighted' style uses bg-only (not `reverse`) so these per-segment
+    foreground colors survive under the highlight bar.
 
-    Color-coded kind labels are still available in the detail view.
+    Kind colors: skill=magenta, command=blue, agent=yellow.
     """
     pad = " " * indent
+    kind_style = _KIND_COLORS.get(s.kind, "")
     return questionary.Choice(
-        title=f"{pad}{s.name:<30} {s.kind}",
+        title=[
+            ("", f"{pad}{s.name:<30} "),
+            (kind_style, s.kind),
+        ],
         value=("skill", s.name),
     )
 
