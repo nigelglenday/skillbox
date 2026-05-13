@@ -19,12 +19,9 @@ from .splash_art import SKILLBOX_BANNER
 
 
 # ---------------------------------------------------------------------------
-# Monkeypatch: make questionary's search-filter tolerate FormattedText titles.
-#
-# questionary's default `filtered_choices` does `c.title.lower()` on every
-# choice. That breaks when a Choice has a `title` set to a list of (style, text)
-# tuples (FormattedText), which we use to render color-coded kind labels.
-# The patch extracts plain text from either form before lowering.
+# Monkeypatches against questionary:
+#   1. filtered_choices: tolerate FormattedText titles (list-of-tuples)
+#   2. select() wrapper: add Esc keybinding to cancel (questionary stock has none)
 # ---------------------------------------------------------------------------
 
 def _title_as_text(title) -> str:
@@ -49,6 +46,32 @@ def _patched_filtered_choices(self):
 
 
 _qpc.InquirerControl.filtered_choices = property(_patched_filtered_choices)
+
+
+# Add Esc as a cancel key to questionary.select. The stock select.py only
+# binds Ctrl-Q and Ctrl-C as cancel; pressing Esc does nothing. We patch the
+# returned Question's application key_bindings to add Esc.
+_orig_select = questionary.select
+
+
+def _select_with_esc(*args, **kwargs):
+    q = _orig_select(*args, **kwargs)
+    try:
+        from prompt_toolkit.keys import Keys as _Keys
+        kb = q.application.key_bindings
+
+        @kb.add(_Keys.Escape, eager=True)
+        def _(event):
+            event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
+    except Exception:
+        # If the underlying key_bindings object doesn't support .add (e.g., it's
+        # a frozen MergedKeyBindings), silently skip the patch. Ctrl-C still
+        # works as a fallback.
+        pass
+    return q
+
+
+questionary.select = _select_with_esc
 
 _theme = Theme(
     {
@@ -153,8 +176,9 @@ def ok(msg: str) -> None:
 
 
 def _kind_label(kind: str) -> str:
+    """Rich-styled kind label for the detail view (shows colored 'subagent' for agent kind)."""
     style_key = f"kind_{kind}"
-    return f"[{style_key}]{kind}[/{style_key}]"
+    return f"[{style_key}]{_kind_display(kind)}[/{style_key}]"
 
 
 def _source_label(source: str) -> str:
@@ -243,6 +267,20 @@ _KIND_ICONS = {
     "agent":   "🤖",   # robot: subagents
 }
 
+# What we display to the user vs the internal kind key. The directory is
+# ~/.claude/agents/ but conceptually these are "subagents" (Agent-tool
+# spawned, separate context). Display "subagent" to avoid confusion with
+# the broader "Claude Code agent" (which is a whole session).
+_KIND_DISPLAY = {
+    "skill": "skill",
+    "command": "command",
+    "agent": "subagent",
+}
+
+
+def _kind_display(kind: str) -> str:
+    return _KIND_DISPLAY.get(kind, kind)
+
 
 def _skill_choice(s: Skill, *, indent: int = 0) -> questionary.Choice:
     """Format one skill as a picker Choice.
@@ -254,7 +292,7 @@ def _skill_choice(s: Skill, *, indent: int = 0) -> questionary.Choice:
     pad = " " * indent
     icon = _KIND_ICONS.get(s.kind, "·")
     return questionary.Choice(
-        title=f"{pad}{s.name:<35} {icon} {s.kind}",
+        title=f"{pad}{s.name:<35} {icon} {_kind_display(s.kind)}",
         value=("skill", s.name),
     )
 
