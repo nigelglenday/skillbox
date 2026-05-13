@@ -238,23 +238,23 @@ _KIND_COLORS = {
 
 
 _KIND_ICONS = {
-    "skill":   "🟣",  # purple circle
-    "command": "🔵",  # blue circle
-    "agent":   "🟡",  # yellow circle
+    "skill":   "🔧",   # wrench: capabilities you reach for
+    "command": "📢",   # megaphone: slash commands you call out
+    "agent":   "🤖",   # robot: subagents
 }
 
 
 def _skill_choice(s: Skill, *, indent: int = 0) -> questionary.Choice:
-    """Format one skill as a picker Choice with a colored emoji kind indicator.
+    """Format one skill as a picker Choice.
 
     Plain string title so `reverse` highlight renders uniformly across the row.
-    Color comes from the emoji glyph's intrinsic color, which the terminal
-    renders independent of style. Best of both worlds.
+    Emoji kind indicator sits right before the kind word, with its color
+    intrinsic to the glyph (survives the highlight bar).
     """
     pad = " " * indent
     icon = _KIND_ICONS.get(s.kind, "·")
     return questionary.Choice(
-        title=f"{pad}{icon}  {s.name:<33} {s.kind}",
+        title=f"{pad}{s.name:<35} {icon} {s.kind}",
         value=("skill", s.name),
     )
 
