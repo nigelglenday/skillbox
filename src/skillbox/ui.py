@@ -361,11 +361,21 @@ def show_skill_detail(skill: Skill) -> None:
     except OSError:
         return
 
+    # Short preview keeps the action menu visible on one screen. For the full
+    # content, use the "Open in default app" action.
+    PREVIEW_LINES = 25
     lines = content.splitlines()
-    preview = "\n".join(lines[:60])
-    if len(lines) > 60:
-        preview += f"\n\n... ({len(lines) - 60} more lines — see {skill.path})"
-    console.print(Panel(Markdown(preview), title="SKILL.md preview", border_style="border"))
+    preview = "\n".join(lines[:PREVIEW_LINES])
+    if len(lines) > PREVIEW_LINES:
+        remaining = len(lines) - PREVIEW_LINES
+        preview += f"\n\n*({remaining} more lines. Use 'Open in default app' to see the full file.)*"
+    console.print(
+        Panel(
+            Markdown(preview),
+            title=f"SKILL.md preview (first {min(PREVIEW_LINES, len(lines))} lines)",
+            border_style="border",
+        )
+    )
 
 
 # ---------------------------------------------------------------------------
