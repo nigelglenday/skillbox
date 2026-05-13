@@ -504,7 +504,7 @@ def skill_action_menu(skill: Skill, project_root: Optional["Path"] = None) -> Op
             )
         )
     choices.append(questionary.Separator())
-    choices.append(questionary.Choice(title="  ← back to picker", value=ACT_BACK))
+    choices.append(questionary.Choice(title="  ← back to menu", value=ACT_BACK))
 
     return questionary.select(
         f"Action for '{skill.name}':",
