@@ -214,26 +214,19 @@ def render_table(skills: list[Skill], group_by: str = "source") -> None:
         console.print()
 
 
-_KIND_COLORS = {
-    "skill":   "fg:#d75fff",  # magenta: capabilities
-    "command": "fg:#5fafff",  # blue: slash commands
-    "agent":   "fg:#ffd75f",  # yellow: subagents
-}
-
-
 def _skill_choice(s: Skill, *, indent: int = 0) -> questionary.Choice:
-    """Format one skill as a picker Choice with a color-coded kind label.
+    """Format one skill as a picker Choice.
 
-    Compact: name + colored kind. The detail view shows description after enter.
-    Kind colors: skill=magenta, command=blue, agent=yellow.
+    Plain string title (not FormattedText) so questionary's full-row
+    highlight (`reverse` style) renders uniformly, matching a-team's
+    pattern. Per-segment colors via FormattedText would fight the reverse
+    rendering and look broken.
+
+    Color-coded kind labels are still available in the detail view.
     """
     pad = " " * indent
-    kind_style = _KIND_COLORS.get(s.kind, "")
     return questionary.Choice(
-        title=[
-            ("", f"{pad}{s.name:<30} "),
-            (kind_style, s.kind),
-        ],
+        title=f"{pad}{s.name:<30} {s.kind}",
         value=("skill", s.name),
     )
 
