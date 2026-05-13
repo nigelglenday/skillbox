@@ -6,6 +6,8 @@
 
 Inventory and manage your Claude Code skills, slash commands, and subagents. A TUI companion to [a-team](https://github.com/nigelglenday/a-team).
 
+`skillbox` is one of a suite of TUI tools for managing Claude Code state called *termpaper*.
+
 ```
  _____ _   _ _ _ _ _
 /  ___| | (_) | | | |
@@ -17,13 +19,13 @@ Inventory and manage your Claude Code skills, slash commands, and subagents. A T
 
 ## What it is
 
-A clean Claude Code install has maybe a dozen skills. After a few plugins, some experiments, and a handful of custom slash commands, that number creeps past 200. `skillbox` gives you one inventory view across all of it — yours, plugins, and per-project — with a picker, an audit, and safe add/remove.
+A clean Claude Code install has maybe a dozen skills. After a few plugins, some experiments, and a handful of custom slash commands, that number creeps past 200. `skillbox` gives you one inventory view across all of it (yours, plugins, and per-project) with a picker, an audit, and safe add/remove.
 
 Manages three things uniformly:
 
-- **skills** — `~/.claude/skills/<name>/SKILL.md` (auto-triggered capabilities)
-- **commands** — `~/.claude/commands/<name>.md` (slash commands)
-- **agents** — `~/.claude/agents/<name>.md` (subagents)
+- **skills**: `~/.claude/skills/<name>/SKILL.md` (auto-triggered capabilities)
+- **commands**: `~/.claude/commands/<name>.md` (slash commands)
+- **agents**: `~/.claude/agents/<name>.md` (subagents)
 
 Plus everything plugins drop into `~/.claude/plugins/cache/...` and anything a project ships in its own `.claude/` directory.
 
@@ -71,11 +73,11 @@ In the picker:
 - pick a plugin folder → drill into that plugin's skills
 - esc / ctrl-c to go back
 
-After every action, a one-shot status banner appears above the menu. Pattern matches a-team: app frame stays anchored, transient feedback above the menu.
+After every action, a one-shot status banner appears above the menu. Same pattern as a-team: app frame stays anchored, transient feedback above the menu.
 
 ## Layout
 
-Skills live in a few canonical places. `skillbox` scans all of them on every invocation — no separate registry to maintain.
+Skills live in a few canonical places. `skillbox` scans all of them on every invocation. No separate registry to maintain.
 
 | Source | Path | Available in |
 |---|---|---|
@@ -97,7 +99,7 @@ tags: [writing, finance]
 ---
 ```
 
-When any of your skills have tags, the picker sub-groups YOURS by tag (skills with multiple tags appear under each). `skillbox ls --group-by tag` does the same on the command line. Tagging is the recommended way to organize — folders force a single hierarchy; tags don't.
+When any of your skills have tags, the picker sub-groups YOURS by tag (skills with multiple tags appear under each). `skillbox ls --group-by tag` does the same on the command line. Tagging is the recommended way to organize. Folders force a single hierarchy; tags don't.
 
 ## Calling skillbox from an agent
 
@@ -112,14 +114,14 @@ Non-interactive subcommands work in headless mode (Bash tool, CI, scripts):
 | `skillbox add <path>` | Install a skill from a known local path |
 | `skillbox rm <name> --force` | Remove non-interactively |
 
-The interactive flows (picker, paste-content, editor, clipboard) all require a real terminal — they're for humans.
+The interactive flows (picker, paste-content, editor, clipboard) all require a real terminal. They're for humans.
 
 ## Part of termpaper
 
-`skillbox` is one of a suite of TUI tools for managing Claude Code state:
+The termpaper suite (so far):
 
-- **[a-team](https://github.com/nigelglenday/a-team)** — manage parallel Claude Code sessions; pick one to open, restore all of them
-- **skillbox** — manage skills, commands, and subagents installed across those sessions
+- **[a-team](https://github.com/nigelglenday/a-team)**: manage parallel Claude Code sessions; pick one to open, restore all of them
+- **skillbox**: manage skills, commands, and subagents installed across those sessions
 - (more to come)
 
 Different colors, same pattern: a splash banner anchors the screen, a filterable picker lets you find what you need, an action menu lets you act without leaving the screen. Each tool ships independently so you can install only what you use.
