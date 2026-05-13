@@ -10,11 +10,45 @@ import sys
 from typing import Optional
 
 import questionary
+import questionary.prompts.common as _qpc
 from rich.console import Console
 from rich.theme import Theme
 
 from .scan import Skill
 from .splash_art import SKILLBOX_BANNER
+
+
+# ---------------------------------------------------------------------------
+# Monkeypatch: make questionary's search-filter tolerate FormattedText titles.
+#
+# questionary's default `filtered_choices` does `c.title.lower()` on every
+# choice. That breaks when a Choice has a `title` set to a list of (style, text)
+# tuples (FormattedText), which we use to render color-coded kind labels.
+# The patch extracts plain text from either form before lowering.
+# ---------------------------------------------------------------------------
+
+def _title_as_text(title) -> str:
+    """Extract plain text from a Choice title (string OR FormattedText list)."""
+    if isinstance(title, str):
+        return title
+    if isinstance(title, list):
+        return "".join(p[1] for p in title if isinstance(p, tuple) and len(p) >= 2)
+    return str(title)
+
+
+def _patched_filtered_choices(self):
+    if not self.search_filter:
+        return self.choices
+    needle = self.search_filter.lower()
+    filtered = [
+        c for c in self.choices
+        if needle in _title_as_text(c.title).lower()
+    ]
+    self.found_in_search = len(filtered) > 0
+    return filtered if self.found_in_search else self.choices
+
+
+_qpc.InquirerControl.filtered_choices = property(_patched_filtered_choices)
 
 _theme = Theme(
     {
