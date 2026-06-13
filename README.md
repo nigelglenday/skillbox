@@ -1,12 +1,12 @@
 # skillbox
 
-![License](https://img.shields.io/badge/license-MIT-yellow) ![Python](https://img.shields.io/badge/python-3.11%2B-blue) ![Platform](https://img.shields.io/badge/platform-macOS-black) ![Termpaper](https://img.shields.io/badge/suite-termpaper-cyan)
+![License](https://img.shields.io/badge/license-MIT-yellow) ![Python](https://img.shields.io/badge/python-3.11%2B-blue) ![Platform](https://img.shields.io/badge/platform-macOS-black) ![Termpaper](https://img.shields.io/badge/set-termpaper-cyan)
 
 > *Every tool earns its place.*
 
 Inventory and manage your Claude Code skills, slash commands, and subagents. A TUI companion to [a-team](https://github.com/nigelglenday/a-team).
 
-`skillbox` is one of a suite of TUI tools for managing Claude Code state called *termpaper*.
+Part of [**termpaper.dev**](https://termpaper.dev), a set of utilities for managing Claude Code from the terminal. See [a-team](https://github.com/nigelglenday/a-team), [whispertty](https://github.com/nigelglenday/whispertty), and [eagent](https://github.com/nigelglenday/eagent) for the rest of the set.
 
 ```
  _____ _   _ _ _ _ _
