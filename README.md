@@ -122,7 +122,10 @@ The termpaper set (so far):
 
 - **[a-team](https://github.com/nigelglenday/a-team)**: manage parallel Claude Code sessions; pick one to open, restore all of them
 - **skillbox**: manage skills, commands, and subagents installed across those sessions
-- (more to come)
+- **[whispertty](https://github.com/nigelglenday/whispertty)**: record audio, transcribe with Whisper, label speakers, browse from a TUI
+- **[eagent](https://github.com/nigelglenday/eagent)**: file-based inter-session messaging + multi-session orchestrator pattern (an EA built from coordinated Claude Code sessions)
+
+See [termpaper.dev](https://termpaper.dev) for the full set.
 
 Different colors, same pattern: a splash banner anchors the screen, a filterable picker lets you find what you need, an action menu lets you act without leaving the screen. Each tool ships independently so you can install only what you use.
 
